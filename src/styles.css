@@ -1,0 +1,1340 @@
+/* ==================== 全局 ==================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --text: #1f2937;
+  --text-sub: #6b7280;
+  --primary: #4f46e5;
+  --primary-weak: #eef2ff;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 4px 16px rgba(16, 24, 40, 0.05);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100%;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== 顶部标题栏 ==================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 28px;
+  background: linear-gradient(120deg, #1e1b4b 0%, #312e81 55%, #4338ca 100%);
+  color: #fff;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: #a5b4fc;
+}
+
+.header-text h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.header-text p {
+  font-size: 12px;
+  color: #c7d2fe;
+}
+
+.stage-badge {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ==================== 主布局 ==================== */
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 20px 28px;
+  display: grid;
+  /* 右侧工作区随视口自适应：1920 约 470px，1366 约 360px，不挤压原图操作区 */
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 25vw, 470px);
+  gap: 20px;
+  align-items: start;
+}
+
+.left-panel {
+  min-width: 0;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+/* ==================== 上传面板 ==================== */
+.upload-card {
+  padding: 0;
+}
+
+.upload-panel {
+  margin: 18px;
+  padding: 72px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 2px dashed #c7d2fe;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+
+.upload-panel:hover,
+.upload-panel.dragging {
+  border-color: var(--primary);
+  background: var(--primary-weak);
+}
+
+.upload-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--primary-weak);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+
+.upload-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.upload-hint {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.upload-formats {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ==================== 画布卡片 ==================== */
+.canvas-card {
+  padding: 14px 18px 12px;
+}
+
+.card-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.btn-ghost {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: all 0.15s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* 新标注标签选择器 */
+.label-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.picker-label {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.label-chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-sub);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.label-chip:hover {
+  border-color: #a5b4fc;
+  color: var(--primary);
+}
+
+.label-chip.active {
+  color: #fff !important;
+}
+
+/* 标注画布区域 */
+.canvas-area {
+  background: #fafafa;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.canvas-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* ==================== 右侧面板 ==================== */
+.panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-title::before {
+  content: "";
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.panel-caption {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.crop-preview .konvajs-content,
+.crop-result .konvajs-content {
+  margin: 0 auto;
+}
+
+.crop-result {
+  margin-top: 14px;
+}
+
+/* 裁剪比例切换控件（面板标题右侧） */
+.ratio-switch {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  background: #f3f4f6;
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.ratio-btn {
+  border: none;
+  background: transparent;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-sub);
+  transition: all 0.15s;
+}
+
+.ratio-btn:hover {
+  color: var(--primary);
+}
+
+.ratio-btn.active {
+  background: #fff;
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
+}
+
+/* 模拟界面遮挡开关 */
+.occlusion-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.occlusion-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* 滑动开关（checkbox 自定义外观） */
+.occlusion-toggle {
+  appearance: none;
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #d1d5db;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.occlusion-toggle:checked {
+  background: var(--primary);
+}
+
+.occlusion-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.15s;
+}
+
+.occlusion-toggle:checked::after {
+  left: 18px;
+}
+
+.occlusion-hint {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* 遮挡估算声明 */
+.occlusion-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-sub);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.occlusion-note strong {
+  color: #92400e;
+}
+
+/* ==================== 标注清单 ==================== */
+.list-empty {
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+  padding: 18px 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.list-summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* 状态徽章 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.level-full {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.level-partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.level-missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.list-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.label-select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.item-head .badge {
+  margin-left: auto;
+}
+
+.icon-btn {
+  border: none;
+  background: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.icon-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.item-metrics {
+  display: flex;
+  gap: 24px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.m-label {
+  margin-right: 6px;
+}
+
+.m-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ==================== 问题诊断面板 ==================== */
+.diagnosis-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diagnosis-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.diag-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.diag-line {
+  display: flex;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.diag-suggestion {
+  margin-top: 6px;
+  font-size: 12px;
+  background: var(--primary-weak);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* 二维码可识别性压力测试 */
+.qr-check {
+  margin-top: 6px;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+}
+
+.qr-conclusion {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qr-conclusion.qr-fail {
+  color: #dc2626;
+}
+
+.qr-content {
+  word-break: break-all;
+}
+
+.qr-disclaimer {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-sub);
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* ==================== 传播风险报告 ==================== */
+
+/* 报告导出工具栏：位于报告容器之外，按钮不会进入导出的 PNG */
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.export-btn {
+  margin-left: 0;
+}
+
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-error {
+  font-size: 12px;
+  color: #991b1b;
+}
+
+/* 报告品牌行（网页与导出 PNG 保持一致） */
+.report-app-title {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text-sub);
+  margin-bottom: 2px;
+}
+
+/* 导出保险：报告容器完整高度展示，不出现内部滚动条 */
+.risk-report {
+  overflow: visible;
+}
+
+.report-toggle-btn {
+  width: 100%;
+  padding: 8px 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.report-card {
+  /* 不再设置内部滚动：报告已改为宽版展示，由页面整体滚动 */
+}
+
+/* 测试概况网格 */
+.report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.report-cell {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.report-cell .m-label {
+  margin-right: 0;
+}
+
+.report-cell .badge {
+  margin-right: 4px;
+}
+
+.report-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 结论摘要 */
+.report-summary {
+  background: var(--primary-weak);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.report-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 8px;
+  color: var(--text);
+}
+
+/* 问题区域列表 */
+.report-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.report-item .badge {
+  margin-left: auto;
+}
+
+.report-metrics {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+/* 二维码结论（温和突出，不夸张） */
+.report-qr-conclusion {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-qr-conclusion.report-qr-fail {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* 底部固定说明 */
+.report-notes {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-notes p {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* ==================== 版本对比 ==================== */
+.cmp-rule-note {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+}
+
+.cmp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cmp-actions .btn-ghost {
+  margin-left: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.cmp-actions .btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cmp-danger:hover {
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+}
+
+.cmp-baseline-info {
+  font-size: 12px;
+  color: var(--text-sub);
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+/* 场景不一致提示 */
+.cmp-scenario-warning {
+  font-size: 12px;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* 修改前 / 修改后头部 */
+.cmp-headers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cmp-header {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.cmp-header .m-label {
+  margin-right: 0;
+}
+
+.cmp-header-file {
+  font-weight: 600;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmp-header-scene {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 对比卡片列表 */
+.cmp-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cmp-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.cmp-item .badge {
+  margin-left: auto;
+}
+
+.cmp-unpaired {
+  background: #f9fafb;
+}
+
+.cmp-pair-note {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.cmp-row {
+  display: flex;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* 变化方向徽章（沿用状态色系） */
+.cmp-improved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cmp-unchanged {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.cmp-declined {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* 二维码突出文案（温和，不夸张） */
+.cmp-qr-recovered {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.cmp-qr-lost {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* ==================== 检测规则说明 ==================== */
+.threshold-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.threshold-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.threshold-list .badge {
+  min-width: 74px;
+  justify-content: center;
+}
+
+.threshold-note {
+  font-size: 12px;
+  color: var(--text-sub);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.threshold-note strong {
+  color: #92400e;
+}
+
+/* ==================== 占位卡片 ==================== */
+.placeholder-text {
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 10px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+/* ==================== 产品说明 + 流程导航 ==================== */
+.app-intro {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px 12px;
+}
+
+.intro-text {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+}
+
+.steps-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 4px;
+}
+
+.step-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.step-no {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: inline-grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-name {
+  white-space: nowrap;
+}
+
+.step-arrow {
+  margin: 0 8px;
+  color: #d1d5db;
+}
+
+.step-item.done {
+  color: var(--text-sub);
+}
+
+.step-item.done .step-no {
+  background: var(--primary-weak);
+  color: var(--primary);
+}
+
+.step-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.step-item.active .step-no {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ==================== 场景说明 ==================== */
+.scene-note {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin: -4px 0 10px;
+}
+
+/* ==================== 检测结果概览 ==================== */
+.overview-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.overview-badge .badge {
+  min-width: 74px;
+  justify-content: center;
+}
+
+.ov-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* 严重缺失优先展示：数量加粗显色 */
+.overview-badge.ov-missing .ov-count {
+  color: #991b1b;
+}
+
+/* 完整降低视觉权重 */
+.overview-badge.ov-full {
+  opacity: 0.75;
+}
+
+.overview-badge.ov-full .ov-count {
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+/* ==================== 可折叠区块 ==================== */
+.collapsible-head {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.collapsible-head:hover {
+  color: var(--primary);
+}
+
+.collapsible-count {
+  font-weight: 400;
+  color: var(--text-sub);
+}
+
+.collapsible-arrow {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 13px;
+  transition: transform 0.15s;
+}
+
+.collapsible-arrow.open {
+  transform: rotate(180deg);
+}
+
+.collapsible-body {
+  margin-top: 4px;
+}
+
+/* ==================== 报告入口 ==================== */
+.report-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.entry-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+/* ==================== 空状态引导 ==================== */
+.guide-text {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+}
+
+.guide-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-steps li {
+  font-size: 13px;
+  color: var(--text);
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+/* ==================== 宽版传播风险报告（主编辑区下方整页宽展示） ==================== */
+.wide-report {
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 0 28px 24px;
+}
+
+/* 概况横向信息卡：自适应列数 */
+.wide-report .report-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+/* 问题区域卡片：宽版下 1～2 列，窄屏自动回落为 1 列 */
+.wide-report .report-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .wide-report .report-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 面板标题旁的小标签（如「几何状态」） */
+.title-tag {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-sub);
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+
+/* ==================== 文字识别测试（OCR 第一版） ==================== */
+.ocr-model-hint {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+
+.ocr-run-btn {
+  width: 100%;
+  margin-left: 0;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.ocr-run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ocr-status {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+
+.ocr-status.ocr-failed {
+  color: #991b1b;
+}
+
+.ocr-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ocr-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.ocr-row {
+  display: flex;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.ocr-text {
+  word-break: break-all;
+}
+
+.ocr-error {
+  font-size: 12px;
+  color: #991b1b;
+}
+
+/* 诊断面板中的 OCR 结果区 */
+.ocr-check {
+  margin-top: 6px;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+}
+
+.diag-ocr-warning {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* ==================== 画质退化压力测试 ==================== */
+.degradation-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.degradation-settings {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.degradation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.degradation-select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.degradation-dims {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.degradation-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+.degradation-preview {
+  margin-top: 10px;
+}
+
+.degradation-preview-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.degradation-preview-img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: block;
+}
+
+.degradation-preview-dims {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 6px;
+}
+
+/* 报告中的退化详情小字 */
+.report-cell-detail {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+/* OCR 过期提示 */
+.ocr-invalidated {
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 1100px) {
+  .app-main {
+    grid-template-columns: 1fr;
+  }
+
+  .right-panel {
+    position: static;
+  }
+}

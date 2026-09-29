@@ -1,0 +1,19 @@
+﻿# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Local files
+*.local
+
+# Test coverage
+coverage/

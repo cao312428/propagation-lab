@@ -1,0 +1,33 @@
+{
+  "name": "spread-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "传播实验室 - 第一阶段：图片上传、重要信息标注、1:1 居中裁剪模拟与几何可见率分析",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "html-to-image": "^1.11.13",
+    "jsqr": "^1.4.0",
+    "konva": "^10.7.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-konva": "^19.3.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "qrcode": "^1.5.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}
