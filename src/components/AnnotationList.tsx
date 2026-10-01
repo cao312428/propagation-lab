@@ -52,7 +52,12 @@ export function AnnotationList({ analyses, onChangeLabel, onDelete }: Props) {
                 <span className={`badge ${LEVEL_CLASS[finalLevel ?? level]}`} title="几何状态">
                   {finalLevel ?? level}
                 </span>
-                <button className="icon-btn" title="删除该标注" onClick={() => onDelete(a.id)}>
+                <button
+                  className="icon-btn"
+                  title="删除该标注"
+                  aria-label="删除该标注"
+                  onClick={() => onDelete(a.id)}
+                >
                   ✕
                 </button>
               </div>

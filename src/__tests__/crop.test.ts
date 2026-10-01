@@ -120,6 +120,76 @@ describe('9:16 模式下的几何可见率', () => {
   });
 });
 
+describe('computeCenterCrop：4:5 居中裁剪区域（多场景阶段新增）', () => {
+  it('恰好 4:5 的图（800×1000）：裁剪区域等于全图', () => {
+    expect(computeCenterCrop(800, 1000, 4, 5)).toEqual({ x: 0, y: 0, w: 800, h: 1000 });
+  });
+
+  it('横图（1920×1080）：宽度占满，高度居中取 1080 内最大 4:5 矩形', () => {
+    // 4:5 时裁剪宽 = min(1920, 1080×4/5=864)，裁剪高 = 864×5/4 = 1080
+    const crop = computeCenterCrop(1920, 1080, 4, 5);
+    expect(crop.w).toBeCloseTo(864, 10);
+    expect(crop.h).toBeCloseTo(1080, 10);
+    expect(crop.x).toBeCloseTo((1920 - 864) / 2, 10);
+    expect(crop.y).toBe(0);
+  });
+
+  it('竖图（1080×1920）：高度占满，宽度居中取 4:5', () => {
+    // 裁剪高 = min(1920, 1080×5/4=1350)=1350，裁剪宽 = 1350×4/5 = 1080
+    const crop = computeCenterCrop(1080, 1920, 4, 5);
+    expect(crop.w).toBeCloseTo(1080, 10);
+    expect(crop.h).toBeCloseTo(1350, 10);
+    expect(crop.x).toBe(0);
+    expect(crop.y).toBeCloseTo((1920 - 1350) / 2, 10);
+  });
+});
+
+describe('computeCenterCrop：16:9 居中裁剪区域（多场景阶段新增）', () => {
+  it('恰好 16:9 的横图（1920×1080）：裁剪区域等于全图', () => {
+    expect(computeCenterCrop(1920, 1080, 16, 9)).toEqual({ x: 0, y: 0, w: 1920, h: 1080 });
+  });
+
+  it('竖图（1080×1920）：宽度占满，高度居中取 16:9', () => {
+    // 裁剪宽 = min(1080, 1920×16/9 超出原图宽) = 1080，裁剪高 = 1080×9/16 = 607.5
+    const crop = computeCenterCrop(1080, 1920, 16, 9);
+    expect(crop.w).toBeCloseTo(1080, 10);
+    expect(crop.h).toBeCloseTo(607.5, 10);
+    expect(crop.x).toBe(0);
+    expect(crop.y).toBeCloseTo((1920 - 607.5) / 2, 10);
+  });
+
+  it('正方形（800×800）：裁剪为 800×450 横条，垂直居中', () => {
+    const crop = computeCenterCrop(800, 800, 16, 9);
+    expect(crop.w).toBeCloseTo(800, 10);
+    expect(crop.h).toBeCloseTo(450, 10);
+    expect(crop.x).toBe(0);
+    expect(crop.y).toBeCloseTo(175, 10);
+  });
+});
+
+describe('4:5 与 16:9 模式下的几何可见率（复用同一套可见率算法）', () => {
+  it('4:5 裁剪下标注横跨边界，可见率按保留面积计算', () => {
+    // 1920×1080 横图，4:5 裁剪区 x=528, w=864, y=0, h=1080
+    const crop = computeCenterCrop(1920, 1080, 4, 5);
+    const a = makeAnnotation(500, 0, 200, 200);
+    // 保留宽 = (500+200) - 528 = 172，保留比例 = 172/200
+    expect(computeVisibleRatio(a, crop)).toBeCloseTo(172 / 200, 10);
+  });
+
+  it('16:9 裁剪下标注完全在裁剪区外，可见率为 0%', () => {
+    // 1080×1920 竖图，16:9 裁剪区 x=0, w=1080, y≈656.25, h=607.5
+    const crop = computeCenterCrop(1080, 1920, 16, 9);
+    const a = makeAnnotation(0, 0, 300, 300); // 位于顶部被裁掉的区域
+    expect(computeVisibleRatio(a, crop)).toBe(0);
+  });
+
+  it('16:9 裁剪下标注完全在裁剪区内，可见率为 100%', () => {
+    const crop = computeCenterCrop(1080, 1920, 16, 9);
+    const a = makeAnnotation(400, 700, 280, 200);
+    expect(computeVisibleRatio(a, crop)).toBeCloseTo(1, 10);
+  });
+});
+
 describe('classifyVisibility：检测结果分级', () => {
   it('可见率 ≥ 85% 判定为「完整」（含临界值 85%）', () => {
     expect(classifyVisibility(1)).toBe('完整');

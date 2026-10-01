@@ -10,11 +10,13 @@ import type { DiagnosisResult } from './diagnosis';
 import type { DegradedQrOutcome, QrCheckResult } from './qrDetection';
 import type { TextRecognitionResult } from '../types/textRecognition';
 import type { DegradationSnapshot } from '../types/comparison';
+import type { MultiScenarioSummary } from '../types/multiScenario';
 import {
   computeDegradedDimensions,
   formatJpegQualityPercent,
   formatScalePercent,
 } from './imageDegradation';
+import { formatReportTime } from './format';
 
 /** 报告排序权重：严重缺失排最前，完整排最后（同级别保持原有顺序） */
 const LEVEL_ORDER: Record<VisibilityLevel, number> = { 严重缺失: 0, 部分可见: 1, 完整: 2 };
@@ -37,6 +39,8 @@ export interface ReportInput {
   qrResults: Map<string, QrCheckResult>;
   /** 文字 OCR 结果（仅用户在界面主动运行后存在） */
   ocrResults: Map<string, TextRecognitionResult>;
+  /** 多场景测试摘要（纯计数，非评分；未运行多场景测试时不提供） */
+  multiScenarioSummary?: MultiScenarioSummary | null;
 }
 
 /** 报告中的一条区域记录（诊断 + 可选的二维码 / OCR 检测结果） */
@@ -66,15 +70,19 @@ export interface ReportData {
   missingCount: number;
   /** 结论摘要（仅拼接已有数据，无主观评价） */
   summary: string;
+  /** 报告生成时间文案（本地时间，仅用于报告展示，不参与任何检测计算） */
+  generatedAtText: string;
   /** 在当前传播场景下识别失败的二维码数量（仅 baseline 可识别而场景失败时计入） */
   qrFailureCount: number;
+  /** 多场景测试摘要（纯计数，非评分；未运行多场景测试时为 null） */
+  multiScenarioSummary: MultiScenarioSummary | null;
   /** 按严重程度排序后的区域列表 */
   items: ReportItem[];
 }
 
-/** 裁剪比例 → 测试场景文案 */
+/** 裁剪比例 → 测试场景文案（1:1 / 4:5 / 9:16 / 16:9 通用） */
 export function formatCropRatioText(ratio: CropRatio): string {
-  return ratio === '1:1' ? '1:1 居中裁剪' : '9:16 居中裁剪';
+  return `${ratio} 居中裁剪`;
 }
 
 /** 遮挡开关 → 文案 */
@@ -106,8 +114,11 @@ export function buildSummary(
  * - 列表按 严重缺失 → 部分可见 → 完整 排序（稳定排序，同级别保持原顺序）；
  * - 二维码失效数 = 结论为「传播处理后二维码识别失败」的标注数
  *   （原图本身无法识别的二维码不计入失效）。
+ *
+ * now 为报告生成时刻（默认当前时间），仅在生成时取一次，
+ * 秒数变化不会触发重复计算。
  */
-export function buildReportData(input: ReportInput): ReportData {
+export function buildReportData(input: ReportInput, now: Date = new Date()): ReportData {
   const items: ReportItem[] = input.diagnoses
     .map((diagnosis) => ({
       diagnosis,
@@ -155,7 +166,9 @@ export function buildReportData(input: ReportInput): ReportData {
     partialCount,
     missingCount,
     summary: buildSummary(items.length, fullCount, partialCount, missingCount, qrFailureCount),
+    generatedAtText: formatReportTime(now),
     qrFailureCount,
+    multiScenarioSummary: input.multiScenarioSummary ?? null,
     items,
   };
 }

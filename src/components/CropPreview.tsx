@@ -4,6 +4,7 @@
  * 2. 下方结果：按裁剪比例的实际画面（宽高比随裁剪区推导，不拉伸），
  *    并准确绘制各标注的保留区域与几何可见率。
  */
+import { useEffect, useRef, useState } from 'react';
 import { Group, Image as KonvaImage, Layer, Rect, Stage, Text } from 'react-konva';
 import type { Annotation, CropRatio, Rect as RectT, VisibilityLevel } from '../types';
 import { CROP_RATIO_OPTIONS, LABEL_COLORS } from '../constants';
@@ -33,9 +34,8 @@ interface Props {
   occluders: RectT[] | null; // 遮挡矩形（原图坐标，未启用时为 null）
 }
 
-/** 缩略图与裁剪结果的画布逻辑尺寸（像素） */
-const THUMB_W = 300;
-const PREVIEW_W = 300;
+/** 缩略图与裁剪结果的画布逻辑尺寸上限（像素） */
+const MAX_STAGE_W = 300;
 
 export function CropPreview({
   image,
@@ -49,11 +49,27 @@ export function CropPreview({
   onOcclusionChange,
   occluders,
 }: Props) {
-  const thumbScale = THUMB_W / imageW;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [stageW, setStageW] = useState(MAX_STAGE_W);
+
+  // 监听容器宽度：窄屏（手机）时画布随容器缩小，避免固定 300px 把页面撑宽。
+  // 只影响显示尺寸，缩略/预览均为显示层缩放，不改动任何原图坐标数据。
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? MAX_STAGE_W;
+      setStageW(Math.max(1, Math.min(MAX_STAGE_W, w)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const thumbScale = stageW / imageW;
   const thumbH = imageH * thumbScale;
   // 结果画布高度由裁剪区域宽高比推导，保证 9:16 竖屏不被拉伸成正方形
-  const previewH = PREVIEW_W * (cropRect.h / cropRect.w);
-  const previewScale = PREVIEW_W / cropRect.w;
+  const previewH = stageW * (cropRect.h / cropRect.w);
+  const previewScale = stageW / cropRect.w;
 
   // 裁剪区域外四个方向的遮罩（灰显被裁掉的部分）
   const masks: RectT[] = [
@@ -69,7 +85,7 @@ export function CropPreview({
   ];
 
   return (
-    <div className="crop-preview">
+    <div className="crop-preview" ref={containerRef}>
       <div className="panel-title">
         裁剪预览
         {/* 裁剪比例切换控件 */}
@@ -78,6 +94,7 @@ export function CropPreview({
             <button
               key={opt.value}
               className={`ratio-btn ${cropRatio === opt.value ? 'active' : ''}`}
+              aria-pressed={cropRatio === opt.value}
               onClick={() => onRatioChange(opt.value)}
               title={`切换为 ${opt.label} 居中裁剪`}
             >
@@ -105,9 +122,9 @@ export function CropPreview({
       </div>
 
       {/* 示意：原图 + 灰显遮罩 + 裁剪框 + 标注框 */}
-      <Stage width={THUMB_W} height={thumbH}>
+      <Stage width={stageW} height={thumbH}>
         <Layer>
-          <KonvaImage image={image} width={THUMB_W} height={thumbH} />
+          <KonvaImage image={image} width={stageW} height={thumbH} />
           {masks.map((m, i) => (
             <Rect
               key={i}
@@ -157,13 +174,13 @@ export function CropPreview({
 
       {/* 结果：1:1 裁剪画面 + 各标注保留区域与可见率 */}
       <div className="crop-result">
-        <Stage width={PREVIEW_W} height={previewH}>
-          <Layer clip={{ x: 0, y: 0, width: PREVIEW_W, height: previewH }}>
+        <Stage width={stageW} height={previewH}>
+          <Layer clip={{ x: 0, y: 0, width: stageW, height: previewH }}>
             {/* 从原图裁剪出中心区域并铺满画布（宽高比与裁剪区域一致，不拉伸） */}
             <KonvaImage
               image={image}
               crop={{ x: cropRect.x, y: cropRect.y, width: cropRect.w, height: cropRect.h }}
-              width={PREVIEW_W}
+              width={stageW}
               height={previewH}
             />
             {analyses.map(({ annotation: a, ratio, finalRatio }) => {

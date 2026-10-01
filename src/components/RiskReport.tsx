@@ -53,16 +53,21 @@ export function RiskReport({ data }: { data: ReportData }) {
         <button
           className="btn-ghost export-btn"
           disabled={exporting}
+          aria-busy={exporting}
           onClick={() => void handleExportPng()}
         >
           {exporting ? '正在生成报告…' : '导出报告 PNG'}
         </button>
-        {exportFailed && <span className="export-error">报告导出失败，请重试。</span>}
+        {exportFailed && (
+          <span className="export-error" role="status">
+            报告导出失败，请重试。
+          </span>
+        )}
       </div>
 
       <div className="risk-report" ref={reportRef}>
-        <div className="report-app-title">传播实验室 · 数字内容关键信息传播压力测试</div>
-        <div className="panel-title">传播风险报告</div>
+        <div className="report-app-title">传播实验室</div>
+        <div className="report-main-title">传播风险报告</div>
 
         {/* 一、测试概况 */}
         <div className="report-grid">
@@ -103,10 +108,33 @@ export function RiskReport({ data }: { data: ReportData }) {
               <span className="badge level-missing">严重缺失 {data.missingCount}</span>
             </span>
           </div>
+          <div className="report-cell">
+            <span className="m-label">报告生成时间</span>
+            <span className="m-value">{data.generatedAtText}</span>
+          </div>
         </div>
 
         {/* 二、结论摘要 */}
         <p className="report-summary">{data.summary}</p>
+
+        {/* 多场景测试摘要（仅运行过多场景测试时存在；纯计数，不是评分） */}
+        {data.multiScenarioSummary && (
+          <div className="report-multi-summary">
+            <div className="report-section-title">多场景测试摘要</div>
+            <div className="report-multi-line">
+              <span className="m-label">已测试场景</span>
+              <span className="m-value">{data.multiScenarioSummary.testedScenarioCount} 个</span>
+            </div>
+            <div className="report-multi-line">
+              <span className="m-label">存在严重缺失的场景</span>
+              <span className="m-value">{data.multiScenarioSummary.missingScenarioCount} 个</span>
+            </div>
+            <div className="report-multi-line">
+              <span className="m-label">二维码出现无法识别的场景</span>
+              <span className="m-value">{data.multiScenarioSummary.qrFailureScenarioCount} 个</span>
+            </div>
+          </div>
+        )}
 
         {/* 三、问题区域列表 */}
         <div className="report-section-title">问题区域列表</div>

@@ -18,6 +18,14 @@ import type { OcrRunStatus, TextRecognitionResult } from './types/textRecognitio
 import { buildDegradedScenePreview, DEFAULT_DEGRADATION } from './utils/imageDegradation';
 import { detectDegradedQrForAnnotation, type DegradedQrOutcome } from './utils/qrDetection';
 import { formatSize } from './utils/format';
+import {
+  buildMultiScenarioSummary,
+  buildScenarioResults,
+  isQrAnnotationForScenario,
+  resolveScenarios,
+  runQrBatch,
+} from './utils/multiScenario';
+import type { MultiScenarioRunResult, MultiScenarioRunStatus } from './types/multiScenario';
 import { UploadPanel } from './components/UploadPanel';
 import { AnnotationCanvas } from './components/AnnotationCanvas';
 import { CropPreview, type Analysis } from './components/CropPreview';
@@ -30,6 +38,9 @@ import { ResultOverview } from './components/ResultOverview';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { TextRecognitionPanel } from './components/TextRecognitionPanel';
 import { DegradationPanel } from './components/DegradationPanel';
+import { MultiScenarioPanel } from './components/MultiScenarioPanel';
+import { ScenarioMatrix } from './components/ScenarioMatrix';
+import { ScenarioDetailPanel } from './components/ScenarioDetailPanel';
 
 let idSeq = 0;
 /** 生成标注 ID（时间戳 + 自增序号，避免依赖浏览器 API） */
@@ -64,6 +75,15 @@ export default function App() {
     width: number;
     height: number;
   } | null>(null);
+  const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]); // 多场景测试选中的场景
+  const [multiRun, setMultiRun] = useState<MultiScenarioRunResult | null>(null); // 多场景运行结果（仅内存）
+  const [multiStatus, setMultiStatus] = useState<MultiScenarioRunStatus>('idle');
+  const [multiProgress, setMultiProgress] = useState<{ done: number; total: number } | null>(null);
+  const [multiSelectedCell, setMultiSelectedCell] = useState<{
+    scenarioId: string;
+    annotationId: string;
+  } | null>(null);
+  const multiRunIdRef = useRef(0); // 递增作废进行中的多场景任务
   const reuploadRef = useRef<HTMLInputElement>(null);
 
   /** 上传处理：校验格式；重新上传前确认清空标注 */
@@ -193,8 +213,9 @@ export default function App() {
       diagnoses,
       qrResults,
       ocrResults: new Map(ocrResults.map((r) => [r.annotationId, r])),
+      multiScenarioSummary: multiRun?.summary ?? null,
     });
-  }, [image, cropRect, fileName, imageW, imageH, cropRatio, occlusionEnabled, degradationSnapshot, degradedQrResults, diagnoses, qrResults, ocrResults]);
+  }, [image, cropRect, fileName, imageW, imageH, cropRatio, occlusionEnabled, degradationSnapshot, degradedQrResults, diagnoses, qrResults, ocrResults, multiRun]);
 
   /** 版本对比：快照存在时按当前状态实时生成对比结果；
    * 场景（裁剪比例 + 遮挡开关 + 画质退化设置）不一致时不生成结论。 */
@@ -353,6 +374,55 @@ export default function App() {
     };
   }, [image, cropRect, occluders, degradation]);
 
+  /** 多场景结果失效：图片 / 标注 / 场景选择 / 当前裁剪比例 / 遮挡开关 /
+   * 画质退化参数任一变化 → 作废进行中的任务并清除旧结果，绝不静默展示过期结果。
+   * 画质退化参数虽不改变退化预设本身，但影响 OCR 条件匹配，故一并纳入失效。 */
+  useEffect(() => {
+    multiRunIdRef.current += 1; // 作废进行中的多场景任务
+    if (multiRun) {
+      setMultiRun(null);
+      setMultiStatus('stale');
+      setMultiSelectedCell(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [image, annotations, selectedScenarioIds, cropRatio, occlusionEnabled, degradation]);
+
+  /** 运行多场景测试：几何立即计算，二维码按选中场景批量检测（异步），OCR 不自动执行 */
+  const handleRunMultiScenario = async () => {
+    if (!image || !cropRect || annotations.length === 0 || selectedScenarioIds.length === 0) return;
+    const runId = ++multiRunIdRef.current;
+    setMultiStatus('running');
+    setMultiProgress(null);
+    setMultiSelectedCell(null);
+    // 运行时刻快照：OCR 结果与退化参数只取「运行时刻已存在」的值
+    const scenarios = resolveScenarios(selectedScenarioIds, cropRatio, occlusionEnabled, imageW, imageH);
+    const qrAnnotations = annotations.filter((a) => isQrAnnotationForScenario(a));
+    const qrMaps = await runQrBatch(image, imageW, imageH, qrAnnotations, scenarios, (done, total) => {
+      if (runId === multiRunIdRef.current) setMultiProgress({ done, total });
+    });
+    if (runId !== multiRunIdRef.current) return; // 运行期间输入已变化，丢弃本次任务
+    const scenarioResults = buildScenarioResults(
+      annotations,
+      scenarios,
+      qrMaps,
+      ocrResults,
+      cropRatio,
+      occlusionEnabled,
+      degradation,
+    );
+    setMultiRun({
+      image,
+      annotations,
+      selectedScenarioIds: [...selectedScenarioIds].sort(),
+      currentCropRatio: cropRatio,
+      currentOcclusionEnabled: occlusionEnabled,
+      scenarios: scenarioResults,
+      summary: buildMultiScenarioSummary(scenarioResults),
+    });
+    setMultiStatus('done');
+    setMultiProgress(null);
+  };
+
   /** 检测结果概览计数（按最终分类统计，供结果概览卡片展示） */
   const overview = useMemo(() => {
     const counts = { 完整: 0, 部分可见: 0, 严重缺失: 0 };
@@ -431,6 +501,7 @@ export default function App() {
                         ? { background: LABEL_COLORS[opt], borderColor: LABEL_COLORS[opt] }
                         : undefined
                     }
+                    aria-pressed={activeLabel === opt}
                     onClick={() => setActiveLabel(opt)}
                   >
                     {opt}
@@ -489,6 +560,20 @@ export default function App() {
                   onEnabledChange={setDegradationEnabled}
                   onScaleChange={setScaleFactor}
                   onQualityChange={setJpegQuality}
+                />
+              </div>
+
+              {/* 多场景测试：一次运行多个传播场景，结果矩阵在页面下方展开 */}
+              <div className="card">
+                <MultiScenarioPanel
+                  hasImage={!!image}
+                  annotations={annotations}
+                  selectedIds={selectedScenarioIds}
+                  onSelectionChange={setSelectedScenarioIds}
+                  status={multiStatus}
+                  progress={multiProgress}
+                  summary={multiRun?.summary ?? null}
+                  onRun={() => void handleRunMultiScenario()}
                 />
               </div>
 
@@ -613,6 +698,40 @@ export default function App() {
         <section className="wide-report">
           <div className="card">
             <RiskReport data={reportData} />
+          </div>
+        </section>
+      )}
+
+      {/* 多场景风险矩阵：运行完成后在主编辑区下方展开，
+          行 = 标注区域，列 = 选中场景；点击单元格查看该区域 × 场景详情 */}
+      {image && multiRun && multiStatus === 'done' && (
+        <section className="wide-report multi-scenario-section">
+          <div className="card">
+            <CollapsibleSection
+              title="多场景风险矩阵"
+              count={multiRun.summary.testedScenarioCount}
+              defaultOpen
+            >
+              <ScenarioMatrix
+                run={multiRun}
+                selectedCell={multiSelectedCell}
+                onSelectCell={(scenarioId, annotationId) =>
+                  setMultiSelectedCell((prev) =>
+                    prev?.scenarioId === scenarioId && prev.annotationId === annotationId
+                      ? null
+                      : { scenarioId, annotationId },
+                  )
+                }
+              />
+              {multiSelectedCell && (
+                <ScenarioDetailPanel
+                  run={multiRun}
+                  scenarioId={multiSelectedCell.scenarioId}
+                  annotationId={multiSelectedCell.annotationId}
+                  onClose={() => setMultiSelectedCell(null)}
+                />
+              )}
+            </CollapsibleSection>
           </div>
         </section>
       )}

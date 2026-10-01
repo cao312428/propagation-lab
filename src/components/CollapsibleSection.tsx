@@ -21,6 +21,7 @@ export function CollapsibleSection({ title, count, defaultOpen = true, children 
       <button
         type="button"
         className="collapsible-head panel-title"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         title={open ? '点击收起' : '点击展开'}
       >

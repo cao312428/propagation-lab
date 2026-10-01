@@ -21,7 +21,17 @@ export function UploadPanel({ onFile }: Props) {
   return (
     <div
       className={`upload-panel ${dragging ? 'dragging' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label="上传作品图片，支持点击或拖拽选择 PNG 或 JPG 文件"
       onClick={() => inputRef.current?.click()}
+      onKeyDown={(e) => {
+        // 键盘可达：Enter / 空格触发文件选择（与鼠标点击一致）
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
       onDragOver={(e) => {
         e.preventDefault();
         setDragging(true);

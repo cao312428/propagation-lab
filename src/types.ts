@@ -24,5 +24,5 @@ export interface Annotation extends Rect {
 /** 几何可见率判定结果 */
 export type VisibilityLevel = '完整' | '部分可见' | '严重缺失';
 
-/** 裁剪比例选项（第二阶段新增 9:16） */
-export type CropRatio = '1:1' | '9:16';
+/** 裁剪比例选项（均为居中裁剪；多场景阶段新增 4:5 与 16:9） */
+export type CropRatio = '1:1' | '4:5' | '9:16' | '16:9';

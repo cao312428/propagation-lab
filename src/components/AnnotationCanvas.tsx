@@ -97,7 +97,12 @@ export function AnnotationCanvas({ image, imageW, imageH, annotations, onAdd }: 
   const borderWidth = 2 / scale;
 
   return (
-    <div className="canvas-area" ref={containerRef}>
+    <div
+      className="canvas-area"
+      ref={containerRef}
+      role="img"
+      aria-label="原图标注画布：选择标签后拖动鼠标框选重要信息区域"
+    >
       <Stage
         width={stageW}
         height={stageH}
