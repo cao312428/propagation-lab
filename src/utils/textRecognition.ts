@@ -10,6 +10,7 @@
  */
 import type { LabelType, Rect } from '../types';
 import type {
+  OcrPixelSource,
   OcrResultStatus,
   OcrRunFingerprint,
   TextRecognitionResult,
@@ -47,6 +48,35 @@ export const ROI_TOO_SMALL_REASON = '文字区域过小，无法进行识别。'
 
 /** 语言模型加载提示（界面常驻说明） */
 export const OCR_MODEL_LOADING_HINT = '首次文字识别可能需要加载 OCR 语言模型，请稍候。';
+
+/* ------------------------------------------------------------------
+ * OCR 置信度与低置信度提示（项目初始产品规则，非行业标准）
+ * ------------------------------------------------------------------ */
+
+/**
+ * 低置信度阈值（0～100）。
+ * 原图 OCR 引擎置信度低于该值时，界面显示「仅供参考」的中性提示；
+ * 这只是提示，不会因此把 OCR 结果判定为失败。
+ * 本项目初始产品规则，不是行业标准。
+ */
+export const LOW_OCR_CONFIDENCE_THRESHOLD = 60;
+
+/** 低置信度中性提示（仅提示，不判定失败） */
+export const LOW_OCR_CONFIDENCE_NOTICE =
+  '原图 OCR 识别置信度较低，本次传播前后文本比较仅供参考。';
+
+/** 传播前后 OCR 文本相似度的口径说明（界面与报告保持一致） */
+export const OCR_SIMILARITY_NOTE =
+  '传播前后 OCR 文本相似度描述传播前后 OCR 识别结果的一致程度，不代表文字识别正确率。';
+
+/** OCR 置信度口径说明（界面常驻） */
+export const OCR_CONFIDENCE_NOTE =
+  'OCR 置信度为 OCR 引擎自身置信信息，不是人类可读性评分，不是传播成功率。';
+
+/** 判断置信度是否低于产品阈值（null = 引擎未提供，不视为低置信度，避免误提示） */
+export function isLowOcrConfidence(confidence: number | null): boolean {
+  return confidence !== null && confidence < LOW_OCR_CONFIDENCE_THRESHOLD;
+}
 
 /* ------------------------------------------------------------------
  * 目标判断与 ROI 计算
@@ -167,12 +197,40 @@ export function classifyOcrResult(
   };
 }
 
-/** 由识别文本组装一条完整结果（含结论与相似度） */
+/**
+ * 计算识别文本与期望文本的相似度（复用标准化 + ocrSimilarity，口径一致）。
+ * - 期望文本为空 / 识别文本为空 → null（无法比较，界面不显示）；
+ * - 完全一致 → 1（界面显示「与期望文本一致」）。
+ * 注意：这是字符级相似度，不叫「准确率」，也不代表识别正确率。
+ */
+export function computeExpectedSimilarity(
+  recognizedRaw: string,
+  expectedRaw: string | undefined,
+): number | null {
+  const expected = expectedRaw === undefined ? '' : normalizeOcrText(expectedRaw);
+  if (expected === '') return null;
+  const recognized = normalizeOcrText(recognizedRaw);
+  if (recognized === '') return null;
+  return ocrSimilarity(recognized, expected);
+}
+
+/**
+ * 由识别文本组装一条完整结果（含结论、相似度、置信度与像素来源）。
+ * extra 可选：未提供时置信度为 null、来源为 original、不计算期望文本比较，
+ * 与旧流程行为完全一致。
+ */
 export function buildOcrResult(
   annotationId: string,
   baselineText: string,
   currentText: string,
   currentSkippedReason?: string,
+  extra: {
+    baselineConfidence?: number | null;
+    currentConfidence?: number | null;
+    baselineSource?: OcrPixelSource;
+    currentSource?: OcrPixelSource;
+    expectedText?: string;
+  } = {},
 ): TextRecognitionResult {
   const { status, similarity } = classifyOcrResult(baselineText, currentText);
   return {
@@ -182,6 +240,12 @@ export function buildOcrResult(
     status,
     similarity,
     currentSkippedReason,
+    baselineConfidence: extra.baselineConfidence ?? null,
+    currentConfidence: extra.currentConfidence ?? null,
+    baselineSource: extra.baselineSource ?? 'original',
+    currentSource: extra.currentSource ?? 'original',
+    expectedBaselineSimilarity: computeExpectedSimilarity(baselineText, extra.expectedText),
+    expectedCurrentSimilarity: computeExpectedSimilarity(currentText, extra.expectedText),
   };
 }
 
@@ -197,6 +261,12 @@ export function ocrFailedResult(
     status: '原图文字未能成功识别，无法判断传播处理是否导致变化',
     similarity: null,
     error: message,
+    baselineConfidence: null,
+    currentConfidence: null,
+    baselineSource: 'original',
+    currentSource: 'original',
+    expectedBaselineSimilarity: null,
+    expectedCurrentSimilarity: null,
   };
 }
 

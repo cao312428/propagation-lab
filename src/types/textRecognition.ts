@@ -1,6 +1,7 @@
 /**
  * 文字可识别性压力测试（OCR 第一版）相关类型。
  * OCR 结果只描述「解码文本的比较」，不描述阅读成功率、可读性评分等虚构指标。
+ * OCR 置信度为 OCR 引擎自身置信信息，不是人类可读性评分，不是传播成功率。
  */
 import type { CropRatio } from '../types';
 import type { DegradedOcrStatus } from '../utils/imageDegradation';
@@ -14,6 +15,9 @@ export type OcrResultStatus =
   | '识别文本发生变化'
   | '传播处理后未能识别文字'
   | '原图文字未能成功识别，无法判断传播处理是否导致变化';
+
+/** OCR 识别使用的像素来源（原始提取 vs 预处理后） */
+export type OcrPixelSource = 'original' | 'preprocessed';
 
 /** 单条文字标注的 OCR 压力测试结果 */
 export interface TextRecognitionResult {
@@ -37,6 +41,27 @@ export interface TextRecognitionResult {
     status: DegradedOcrStatus;
     similarity: number | null;
   };
+
+  /* ---- OCR 可信度增强（本阶段新增） ---- */
+
+  /** 原图 OCR 引擎置信度（0～100；引擎未提供时为 null，不虚构） */
+  baselineConfidence: number | null;
+  /** 当前场景 OCR 引擎置信度（0～100；引擎未提供时为 null） */
+  currentConfidence: number | null;
+  /** 画质退化后 OCR 引擎置信度（0～100；仅启用画质退化且成功识别时存在） */
+  degradedConfidence?: number | null;
+  /** 原图识别采用的像素来源 */
+  baselineSource: OcrPixelSource;
+  /** 场景识别采用的像素来源 */
+  currentSource: OcrPixelSource;
+  /** 退化识别采用的像素来源（仅启用画质退化时存在） */
+  degradedSource?: OcrPixelSource;
+  /** 原图识别文本与期望文本的相似度（0～1；无期望文本或无法比较时为 null） */
+  expectedBaselineSimilarity?: number | null;
+  /** 场景识别文本与期望文本的相似度（0～1；无期望文本或无法比较时为 null） */
+  expectedCurrentSimilarity?: number | null;
+  /** 退化识别文本与期望文本的相似度（0～1；仅启用画质退化且存在期望文本时存在） */
+  expectedDegradedSimilarity?: number | null;
 }
 
 /** OCR 结果对应的运行环境指纹（用于判断结果是否过期） */

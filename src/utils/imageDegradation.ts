@@ -143,7 +143,7 @@ export type DegradedOcrStatus =
 /**
  * OCR 画质退化结论（输入为标准化后的 scene / degradedScene 文本）：
  * scene 无文本 → 不归因于画质退化；
- * 其余按「一致 / 变化 / degraded 无文本」分类，相似度沿用 OCR 文本相似度口径。
+ * 其余按「一致 / 变化 / degraded 无文本」分类，相似度沿用「传播前后 OCR 文本相似度」口径。
  */
 export function classifyDegradedOcr(
   sceneNormalized: string,

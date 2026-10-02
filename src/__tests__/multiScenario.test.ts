@@ -52,6 +52,12 @@ function makeOcrResult(overrides: Partial<TextRecognitionResult> = {}): TextReco
     currentText: '校园文化节',
     status: '识别文本保持一致',
     similarity: 1,
+    baselineConfidence: 85,
+    currentConfidence: 82,
+    baselineSource: 'original',
+    currentSource: 'original',
+    expectedBaselineSimilarity: null,
+    expectedCurrentSimilarity: null,
     ...overrides,
   };
 }

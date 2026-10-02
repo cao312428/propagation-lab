@@ -19,6 +19,8 @@ export interface Rect {
 export interface Annotation extends Rect {
   id: string;
   label: LabelType;
+  /** 期望文本（可选）：仅文字类标签使用，用于「与期望文本相似度」比较；二维码不使用 */
+  expectedText?: string;
 }
 
 /** 几何可见率判定结果 */

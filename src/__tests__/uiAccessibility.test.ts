@@ -75,6 +75,7 @@ describe('AnnotationList：删除按钮可访问名称', () => {
         analyses,
         onChangeLabel: () => {},
         onDelete: () => {},
+        onChangeExpectedText: () => {},
       }),
     );
     expect(html).toContain('aria-label="删除该标注"');

@@ -126,7 +126,7 @@ export function ScenarioDetailPanel({ run, scenarioId, annotationId, onClose }: 
           </div>
           {region.ocr && region.ocr.similarity !== null && (
             <div className="diag-line">
-              <span className="m-label">OCR 文本相似度</span>
+              <span className="m-label">传播前后 OCR 文本相似度</span>
               <span className="m-value">{formatPercent(region.ocr.similarity)}</span>
             </div>
           )}
