@@ -8,6 +8,7 @@ import type { MultiScenarioRunResult } from '../types/multiScenario';
 import { formatPercent } from '../utils/format';
 import { LABEL_COLORS } from '../constants';
 import { formatQrContent } from '../utils/qrDetection';
+import { OCR_SIMILARITY_NOTE } from '../utils/textRecognition';
 
 interface Props {
   run: MultiScenarioRunResult;
@@ -144,6 +145,9 @@ export function ScenarioDetailPanel({ run, scenarioId, annotationId, onClose }: 
           )}
           {!region.ocr && (
             <p className="detail-hint">未运行 OCR：本阶段不自动批量执行文字识别，仅复用当前已存在且条件匹配的结果。</p>
+          )}
+          {region.ocr && (
+            <p className="detail-hint">{OCR_SIMILARITY_NOTE}</p>
           )}
         </div>
       )}

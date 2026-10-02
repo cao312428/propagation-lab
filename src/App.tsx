@@ -26,7 +26,6 @@ import {
   runQrBatch,
 } from './utils/multiScenario';
 import type { MultiScenarioRunResult, MultiScenarioRunStatus } from './types/multiScenario';
-import { buildQrAnnotation, scanQrCandidates, type QrCandidate } from './utils/qrAutoDetect';
 import { UploadPanel } from './components/UploadPanel';
 import { AnnotationCanvas } from './components/AnnotationCanvas';
 import { CropPreview, type Analysis } from './components/CropPreview';
@@ -42,7 +41,6 @@ import { DegradationPanel } from './components/DegradationPanel';
 import { MultiScenarioPanel } from './components/MultiScenarioPanel';
 import { ScenarioMatrix } from './components/ScenarioMatrix';
 import { ScenarioDetailPanel } from './components/ScenarioDetailPanel';
-import { QrScanPanel } from './components/QrScanPanel';
 
 let idSeq = 0;
 /** 生成标注 ID（时间戳 + 自增序号，避免依赖浏览器 API） */
@@ -86,8 +84,6 @@ export default function App() {
     annotationId: string;
   } | null>(null);
   const multiRunIdRef = useRef(0); // 递增作废进行中的多场景任务
-  const [qrCandidates, setQrCandidates] = useState<QrCandidate[] | null>(null); // 二维码扫描候选（null = 未扫描）
-  const [qrScanning, setQrScanning] = useState(false); // 是否正在扫描二维码
   const reuploadRef = useRef<HTMLInputElement>(null);
 
   /** 上传处理：校验格式；重新上传前确认清空标注 */
@@ -108,8 +104,6 @@ export default function App() {
       setImageH(img.naturalHeight);
       setFileName(file.name);
       setAnnotations([]); // 清空原有标注
-      setQrCandidates(null); // 重新上传：清除旧二维码候选
-      setQrScanning(false);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -138,35 +132,6 @@ export default function App() {
     setAnnotations((prev) =>
       prev.map((a) => (a.id === id ? { ...a, expectedText: text.trim() === '' ? undefined : text } : a)),
     );
-  };
-
-  /** 扫描原图二维码：先让「扫描中」状态渲染，再执行同步像素扫描（本地解码，不联网） */
-  const handleScanQr = () => {
-    if (!image || qrScanning) return;
-    setQrScanning(true);
-    setQrCandidates(null);
-    // 让出主线程先渲染状态，再执行耗时扫描
-    setTimeout(() => {
-      try {
-        const found = scanQrCandidates(image);
-        setQrCandidates(found);
-      } catch {
-        setQrCandidates([]); // 扫描异常按「未发现」处理，不崩溃页面
-      } finally {
-        setQrScanning(false);
-      }
-    }, 0);
-  };
-
-  /** 确认二维码候选：转为与手动画框完全等价的普通「二维码」标注 */
-  const addQrCandidate = (candidate: QrCandidate) => {
-    setAnnotations((prev) => [...prev, buildQrAnnotation(candidate, nextId())]);
-    setQrCandidates((prev) => (prev ? prev.filter((c) => c !== candidate) : prev));
-  };
-
-  /** 忽略二维码候选（仅从候选列表移除，不影响任何标注） */
-  const ignoreQrCandidate = (candidate: QrCandidate) => {
-    setQrCandidates((prev) => (prev ? prev.filter((c) => c !== candidate) : prev));
   };
 
   /** 居中裁剪区域（原图坐标），比例由 cropRatio 决定；切换比例不改变标注数据 */
@@ -655,19 +620,6 @@ export default function App() {
                     degradedQrResults={degradedQrResults}
                   />
                 </CollapsibleSection>
-              </div>
-
-              {/* 二维码自动发现：本地解码扫描 → 用户确认后转为普通二维码标注 */}
-              <div className="card">
-                <QrScanPanel
-                  hasImage={!!image}
-                  scanning={qrScanning}
-                  candidates={qrCandidates}
-                  qrAnnotations={annotations.filter((a) => a.label === '二维码')}
-                  onScan={handleScanQr}
-                  onAdd={addQrCandidate}
-                  onIgnore={ignoreQrCandidate}
-                />
               </div>
 
               {/* 文字识别测试（OCR 第一版：仅在用户主动运行后执行） */}
